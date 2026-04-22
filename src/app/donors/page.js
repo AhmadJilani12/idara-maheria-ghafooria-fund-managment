@@ -104,7 +104,7 @@ export default function DonorsPage() {
               });
             }}
           >
-            + Add New Donor
+            {showForm ? '✖️ Close Form' : '+ Add New Donor'}
           </button>
         </div>
 

@@ -76,7 +76,7 @@ export default function LoginPage() {
             onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(26, 95, 61, 0.4)'}
             onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
           >
-            Login to Dashboard
+            Login 
           </button>
         </form>
 
