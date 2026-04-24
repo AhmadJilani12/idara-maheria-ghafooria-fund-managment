@@ -30,6 +30,19 @@
   padding: 120px 60px;
 }
 
+@media (max-width: 768px) {
+  .main {
+    padding: 60px 30px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 30px 15px;
+  }
+}
+
 .intro {
   display: flex;
   flex-direction: column;
@@ -48,12 +61,44 @@
   color: var(--text-primary);
 }
 
+@media (max-width: 768px) {
+  .intro h1 {
+    font-size: 28px;
+    line-height: 36px;
+    letter-spacing: -1.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .intro h1 {
+    font-size: 20px;
+    line-height: 28px;
+    letter-spacing: -1px;
+    max-width: 100%;
+  }
+}
+
 .intro p {
   max-width: 440px;
   font-size: 18px;
   line-height: 32px;
   text-wrap: balance;
   color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .intro p {
+    font-size: 16px;
+    line-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .intro p {
+    font-size: 14px;
+    line-height: 24px;
+    max-width: 100%;
+  }
 }
 
 .intro a {
@@ -68,6 +113,20 @@
   max-width: 440px;
   gap: 16px;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .ctas {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ctas {
+    max-width: 100%;
+    gap: 10px;
+  }
 }
 
 .ctas a {

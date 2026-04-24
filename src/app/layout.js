@@ -9,6 +9,7 @@ const inter = Inter({
 export const metadata = {
   title: "Idara Maheria Ghafooria - Fund Management System",
   description: "Idara Maheria Ghafooria Fund Management System - Islamic Charity Management",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
 export default function RootLayout({ children }) {

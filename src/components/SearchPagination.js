@@ -10,7 +10,7 @@ export function SearchBox({ value, onChange, placeholder = 'Search...' }) {
         placeholder={placeholder}
         style={{
           width: '100%',
-          maxWidth: '300px',
+          maxWidth: '100%',
           padding: '0.6rem 0.8rem',
           border: '2px solid #d0e8e1',
           borderRadius: '4px',
@@ -27,7 +27,8 @@ export function SearchBox({ value, onChange, placeholder = 'Search...' }) {
 
 export function Pagination({ currentPage, totalPages, onPageChange }) {
   const pages = [];
-  const maxPagesToShow = 5;
+  const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+  const maxPagesToShow = isSmallScreen ? 3 : 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
   let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
   
@@ -40,33 +41,35 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-      <button
-        onClick={() => onPageChange(1)}
-        disabled={currentPage === 1}
-        style={{
-          padding: '0.5rem 0.7rem',
-          border: '1px solid #d0e8e1',
-          borderRadius: '4px',
-          background: currentPage === 1 ? '#f0f0f0' : '#fff',
-          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-          fontSize: '0.8rem',
-          opacity: currentPage === 1 ? 0.5 : 1
-        }}
-      >
-        {'<<'}
-      </button>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.35rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+      {!isSmallScreen && (
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: '0.4rem 0.6rem',
+            border: '1px solid #d0e8e1',
+            borderRadius: '4px',
+            background: currentPage === 1 ? '#f0f0f0' : '#fff',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            fontSize: '0.7rem',
+            opacity: currentPage === 1 ? 0.5 : 1
+          }}
+        >
+          {'<<'}
+        </button>
+      )}
 
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         style={{
-          padding: '0.5rem 0.7rem',
+          padding: '0.4rem 0.6rem',
           border: '1px solid #d0e8e1',
           borderRadius: '4px',
           background: currentPage === 1 ? '#f0f0f0' : '#fff',
           cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-          fontSize: '0.8rem',
+          fontSize: '0.7rem',
           opacity: currentPage === 1 ? 0.5 : 1
         }}
       >
@@ -78,13 +81,13 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
           key={page}
           onClick={() => onPageChange(page)}
           style={{
-            padding: '0.5rem 0.7rem',
+            padding: '0.4rem 0.6rem',
             border: page === currentPage ? '2px solid #27ae60' : '1px solid #d0e8e1',
             borderRadius: '4px',
             background: page === currentPage ? '#27ae60' : '#fff',
             color: page === currentPage ? '#fff' : '#000',
             cursor: 'pointer',
-            fontSize: '0.8rem',
+            fontSize: '0.7rem',
             fontWeight: page === currentPage ? 'bold' : 'normal'
           }}
         >
@@ -96,36 +99,38 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         style={{
-          padding: '0.5rem 0.7rem',
+          padding: '0.4rem 0.6rem',
           border: '1px solid #d0e8e1',
           borderRadius: '4px',
           background: currentPage === totalPages ? '#f0f0f0' : '#fff',
           cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-          fontSize: '0.8rem',
+          fontSize: '0.7rem',
           opacity: currentPage === totalPages ? 0.5 : 1
         }}
       >
         {'>'}
       </button>
 
-      <button
-        onClick={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
-        style={{
-          padding: '0.5rem 0.7rem',
-          border: '1px solid #d0e8e1',
-          borderRadius: '4px',
-          background: currentPage === totalPages ? '#f0f0f0' : '#fff',
-          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-          fontSize: '0.8rem',
-          opacity: currentPage === totalPages ? 0.5 : 1
-        }}
-      >
-        {'>>'}
-      </button>
+      {!isSmallScreen && (
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: '0.4rem 0.6rem',
+            border: '1px solid #d0e8e1',
+            borderRadius: '4px',
+            background: currentPage === totalPages ? '#f0f0f0' : '#fff',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            fontSize: '0.7rem',
+            opacity: currentPage === totalPages ? 0.5 : 1
+          }}
+        >
+          {'>>'}
+        </button>
+      )}
 
-      <span style={{ padding: '0.5rem 0.7rem', fontSize: '0.8rem', color: '#7f8c8d' }}>
-        Page {currentPage} of {totalPages}
+      <span style={{ padding: '0.4rem 0.6rem', fontSize: '0.7rem', color: '#7f8c8d' }}>
+        {isSmallScreen ? `${currentPage}/${totalPages}` : `Page ${currentPage} of ${totalPages}`}
       </span>
     </div>
   );

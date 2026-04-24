@@ -10,44 +10,77 @@ function LayoutContent({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || loading) return;
+    
+    if (!user && pathname !== '/login') {
       router.push('/login');
     }
-  }, [user, loading, pathname, router]);
+  }, [mounted, user, loading, pathname, router]);
 
   useEffect(() => {
-    const handleResize = () => {
+    const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
     
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (loading) {
+  // Show loading only during initial auth check
+  if (!mounted || loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontSize: '1.2rem' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh', 
+        fontSize: '1.2rem',
+        background: '#ecf0f1'
+      }}>
         Loading...
       </div>
     );
   }
 
-  if (!user && pathname !== '/login') {
-    return null;
-  }
-
+  // Show login page without layout
   if (pathname === '/login') {
     return children;
   }
 
+  // If user is not logged in and not on login page, redirect (but render login page first)
+  if (!user) {
+    return children;
+  }
+
+  // Show layout for authenticated users
   return (
-    <div style={{ display: 'flex' }}>
-      {!isMobile && <Sidebar />}
-      <main style={{ marginLeft: isMobile ? '0' : '250px', flex: 1, minHeight: '100vh', background: '#ecf0f1', padding: '1rem 0', width: '100%' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem' }}>
+    <div style={{ display: 'flex', width: '100%' }}>
+      <Sidebar />
+      <main style={{ 
+        marginLeft: isMobile ? '0' : '250px', 
+        flex: 1, 
+        minHeight: '100vh', 
+        background: '#ecf0f1', 
+        padding: isMobile ? '3.5rem 0 1rem 0' : '1rem 0',
+        width: '100%',
+        transition: 'all 0.3s ease',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto', 
+          padding: isMobile ? '0 0.75rem' : '0 1rem',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
           {children}
         </div>
       </main>
