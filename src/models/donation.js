@@ -36,7 +36,7 @@ const donationSchema = new mongoose.Schema(
 
     // 📅 month grouping
     month: {
-      type: String, // e.g. "2026-04"
+      type: String, // 
       required: true,
     },
 
