@@ -42,7 +42,7 @@ export default function Sidebar() {
     { href: '/donors', label: 'Manage Donors', icon: '☪️' },
     { href: '/monthly-tracking', label: 'Monthly Tracking', icon: '📅' },
     { href: '/payments', label: 'Record Payment', icon: '💰' },
-    { href: '/reports', label: 'Reports', icon: '📊' }
+  //  { href: '/reports', label: 'Reports', icon: '📊' }
   ];
 
   if (!mounted) {
