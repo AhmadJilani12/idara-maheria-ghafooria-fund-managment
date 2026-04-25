@@ -285,6 +285,8 @@ export default function DonorsPage() {
             currentPage={currentPage} 
             totalPages={totalPages} 
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredDonors.length}
           />
         )}
 

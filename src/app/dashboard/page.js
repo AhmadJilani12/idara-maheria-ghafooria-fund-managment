@@ -180,6 +180,8 @@ export default function Dashboard() {
             currentPage={currentPage} 
             totalPages={totalPages} 
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredPayments.length}
           />
         )}
 

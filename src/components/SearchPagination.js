@@ -25,7 +25,7 @@ export function SearchBox({ value, onChange, placeholder = 'Search...' }) {
   );
 }
 
-export function Pagination({ currentPage, totalPages, onPageChange }) {
+export function Pagination({ currentPage, totalPages, onPageChange, itemsPerPage = 10, totalItems = 0 }) {
   const pages = [];
   const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640;
   const maxPagesToShow = isSmallScreen ? 3 : 5;
@@ -39,6 +39,9 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
   for (let i = startPage; i <= endPage; i++) {
     pages.push(i);
   }
+
+  const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endItem = totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: '0.35rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
@@ -129,9 +132,20 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
         </button>
       )}
 
-      <span style={{ padding: '0.4rem 0.6rem', fontSize: '0.7rem', color: '#7f8c8d' }}>
-        {isSmallScreen ? `${currentPage}/${totalPages}` : `Page ${currentPage} of ${totalPages}`}
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#7f8c8d', padding: '0 0.4rem' }}>
+        {totalItems > 0 ? (
+          <span>
+            {isSmallScreen 
+              ? `${startItem}-${endItem} of ${totalItems}`
+              : `Showing ${startItem} to ${endItem} of ${totalItems}`
+            }
+          </span>
+        ) : (
+          <span>
+            {isSmallScreen ? `${currentPage}/${totalPages}` : `Page ${currentPage} of ${totalPages}`}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

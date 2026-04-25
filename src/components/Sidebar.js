@@ -58,8 +58,8 @@ export default function Sidebar() {
           onClick={() => setIsOpen(!isOpen)}
           style={{
             position: 'fixed',
-            top: '1rem',
-            left: '1rem',
+            top: '0.75rem',
+            left: '0.75rem',
             zIndex: 201,
             background: '#1a5f3d',
             color: '#fff',
@@ -68,7 +68,8 @@ export default function Sidebar() {
             borderRadius: '4px',
             cursor: 'pointer',
             fontSize: '1.3rem',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
           aria-label="Toggle menu"
         >

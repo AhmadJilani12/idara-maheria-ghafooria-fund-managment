@@ -69,7 +69,8 @@ function LayoutContent({ children }) {
         flex: 1, 
         minHeight: '100vh', 
         background: '#ecf0f1', 
-        padding: isMobile ? '3.5rem 0 1rem 0' : '1rem 0',
+        padding: isMobile ? '0' : '1rem 0',
+        paddingTop: isMobile ? 'calc(3.5rem + 0.75rem)' : '1rem',
         width: '100%',
         transition: 'all 0.3s ease',
         boxSizing: 'border-box'
@@ -77,7 +78,7 @@ function LayoutContent({ children }) {
         <div style={{ 
           maxWidth: '1400px', 
           margin: '0 auto', 
-          padding: isMobile ? '0 0.75rem' : '0 1rem',
+          padding: isMobile ? '0 0.75rem 1rem' : '0 1rem 1rem',
           width: '100%',
           boxSizing: 'border-box'
         }}>
