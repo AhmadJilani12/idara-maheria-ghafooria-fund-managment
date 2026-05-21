@@ -1,5 +1,5 @@
 'use client';
-
+//new comment added 
 import { AuthProvider, useAuth } from '@/lib/authContext';
 import Sidebar from '@/components/Sidebar';
 import { usePathname, useRouter } from 'next/navigation';
