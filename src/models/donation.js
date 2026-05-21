@@ -70,17 +70,25 @@ const donationSchema = new mongoose.Schema(
 );
 
 // 🧠 auto-generate receipt + tracking ID before save
-donationSchema.pre("validate", function (next) {
-  if (!this.receiptId) {
-    this.receiptId = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  }
+// Cache buster: v2
+donationSchema.pre("validate", async function () {
+  try {
+    if (!this.receiptId) {
+      this.receiptId = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
 
-  if (!this.trackingId) {
-    this.trackingId = `TRK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    if (!this.trackingId) {
+      this.trackingId = `TRK-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+  } catch (err) {
+    console.error("Error in donation pre-validate hook:", err);
+    throw err;
   }
-
-  next();
 });
 
-export default mongoose.models.Donation ||
-  mongoose.model("Donation", donationSchema);
+// 🧠 Force clear model from cache to resolve "next is not a function" issue
+if (mongoose.models.Donation) {
+  delete mongoose.models.Donation;
+}
+
+export default mongoose.model("Donation", donationSchema);

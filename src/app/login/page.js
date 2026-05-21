@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -20,72 +20,85 @@ export default function LoginPage() {
       return;
     }
 
-    if (login(email, password)) {
+    const result = await login(email, password);
+    if (result.success) {
       router.push('/dashboard');
     } else {
-      setError('Invalid credentials');
+      setError(result.message);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #1a5f3d, #27ae60)', padding: '1rem' }}>
-      <div style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.3)', width: '100%', maxWidth: '420px' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      background: 'var(--bg-sidebar)', 
+      padding: '1rem' 
+    }}>
+      <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '2.5rem', margin: 0 }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>🕌</div>
-          <h1 style={{ fontSize: '1.4rem', color: '#1a5f3d', margin: 0, marginBottom: '0.3rem', fontWeight: '700' }}>Idara Maheria Ghafooria</h1>
-          <p style={{ fontSize: '0.8rem', color: '#27ae60', margin: '0.25rem 0 0', fontWeight: '500' }}>Fund Management System</p>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🕌</div>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Idara Maheria</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Fund Management System</p>
         </div>
 
         {error && (
-          <div style={{ background: '#fadbd8', border: '2px solid #e74c3c', color: '#c0392b', padding: '0.9rem', borderRadius: '4px', marginBottom: '1.5rem', fontWeight: '500', fontSize: '0.9rem' }}>
-            ⚠️ {error}
+          <div className="alert alert-danger" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.2rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '600', color: '#1a5f3d', fontSize: '0.9rem' }}>📧 Email</label>
+          <div className="form-group">
+            <label>📧 Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
-              style={{ width: '100%', padding: '0.65rem', border: '2px solid #d0e8e1', borderRadius: '4px', fontFamily: 'inherit', fontSize: '0.95rem', transition: 'border-color 0.3s', boxSizing: 'border-box' }}
-              onFocus={(e) => e.target.style.borderColor = '#27ae60'}
-              onBlur={(e) => e.target.style.borderColor = '#d0e8e1'}
+              required
             />
           </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: '600', color: '#1a5f3d', fontSize: '0.9rem' }}>🔐 Password</label>
+          <div className="form-group">
+            <label>🔐 Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              style={{ width: '100%', padding: '0.65rem', border: '2px solid #d0e8e1', borderRadius: '4px', fontFamily: 'inherit', fontSize: '0.95rem', transition: 'border-color 0.3s', boxSizing: 'border-box' }}
-              onFocus={(e) => e.target.style.borderColor = '#27ae60'}
-              onBlur={(e) => e.target.style.borderColor = '#d0e8e1'}
+              placeholder="••••••••"
+              required
             />
           </div>
 
           <button
             type="submit"
-            style={{ width: '100%', padding: '0.7rem', background: 'linear-gradient(135deg, #1a5f3d, #27ae60)', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.3s' }}
-            onMouseEnter={(e) => e.target.style.boxShadow = '0 4px 12px rgba(26, 95, 61, 0.4)'}
-            onMouseLeave={(e) => e.target.style.boxShadow = 'none'}
+            className="btn btn-primary"
+            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
           >
-            Login 
+            Sign In
           </button>
         </form>
 
-        <div style={{ marginTop: '1.2rem', padding: '0.9rem', backgroundColor: '#f0f4f1', border: '1px solid #d0e8e1', borderRadius: '4px', fontSize: '0.8rem', color: '#1a5f3d' }}>
-          <p style={{ margin: '0 0 0.4rem', fontWeight: '600', fontSize: '0.8rem' }}>Demo Credentials:</p>
-          <p style={{ margin: '0.2rem 0', fontSize: '0.75rem' }}>Email: <strong>admin@example.com</strong></p>
-          <p style={{ margin: '0.2rem 0', fontSize: '0.75rem' }}>Password: <strong>any value</strong></p>
+        <div style={{ 
+          marginTop: '2rem', 
+          padding: '1rem', 
+          backgroundColor: 'var(--bg-main)', 
+          borderRadius: 'var(--radius)', 
+          fontSize: '0.85rem',
+          border: '1px solid var(--border)'
+        }}>
+          <p style={{ fontWeight: '700', marginBottom: '0.5rem' }}>Demo Credentials:</p>
+          <div style={{ display: 'grid', gap: '0.25rem', color: 'var(--text-muted)' }}>
+            <p>Email: <strong>admin@example.com</strong></p>
+            <p>Password: <strong>admin123</strong></p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

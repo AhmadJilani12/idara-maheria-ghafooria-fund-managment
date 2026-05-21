@@ -21,6 +21,8 @@ function LayoutContent({ children }) {
     
     if (!user && pathname !== '/login') {
       router.push('/login');
+    } else if (user && pathname === '/login') {
+      router.push('/dashboard');
     }
   }, [mounted, user, loading, pathname, router]);
 
@@ -34,18 +36,10 @@ function LayoutContent({ children }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Show loading only during initial auth check
   if (!mounted || loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh', 
-        fontSize: '1.2rem',
-        background: '#ecf0f1'
-      }}>
-        Loading...
+      <div className="flex-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner"></div>
       </div>
     );
   }
@@ -55,33 +49,22 @@ function LayoutContent({ children }) {
     return children;
   }
 
-  // If user is not logged in and not on login page, redirect (but render login page first)
+  // If user is not logged in and not on login page, redirect
   if (!user) {
     return children;
   }
 
-  // Show layout for authenticated users
   return (
     <div style={{ display: 'flex', width: '100%' }}>
       <Sidebar />
-      <main style={{ 
-        marginLeft: isMobile ? '0' : '250px', 
-        flex: 1, 
-        minHeight: '100vh', 
-        background: '#ecf0f1', 
-        padding: isMobile ? '0' : '1rem 0',
-        paddingTop: isMobile ? 'calc(3.5rem + 0.75rem)' : '1rem',
-        width: '100%',
-        transition: 'all 0.3s ease',
-        boxSizing: 'border-box'
-      }}>
-        <div style={{ 
-          maxWidth: '1400px', 
-          margin: '0 auto', 
-          padding: isMobile ? '0 0.75rem 1rem' : '0 1rem 1rem',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
+      <main 
+        className="main-content"
+        style={{ 
+          marginLeft: isMobile ? '0' : '250px',
+          width: isMobile ? '100%' : 'calc(100% - 250px)'
+        }}
+      >
+        <div className="container-fluid" style={{ maxWidth: '1400px' }}>
           {children}
         </div>
       </main>
@@ -96,3 +79,4 @@ export function RootLayoutWrapper({ children }) {
     </AuthProvider>
   );
 }
+

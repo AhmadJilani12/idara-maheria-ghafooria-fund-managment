@@ -15,20 +15,26 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Simple login - in production use real authentication
-    if (email && password) {
-      const user = {
-        id: 1,
-        email: email,
-        name: 'Admin',
-        role: 'admin'
-      };
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
-      return true;
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || 'Invalid credentials' };
+      }
+    } catch (error) {
+      return { success: false, message: 'Failed to connect to server' };
     }
-    return false;
   };
 
   const logout = () => {

@@ -1,138 +1,216 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getMonthlySchedule, getDonors } from '@/lib/dataStore';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 
 export default function MonthlyTrackingPage() {
-  const [monthlySchedule, setMonthlySchedule] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState('April 2026');
+  const currentYear = new Date().getFullYear();
+  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long' });
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTrackingData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/tracking/monthly?month=${currentMonthName}&year=${currentYear}`);
+      const result = await res.json();
+      if (res.ok) {
+        setData(result);
+      }
+    } catch (error) {
+      console.error('Error fetching tracking data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentMonthName, currentYear]);
 
   useEffect(() => {
-    setMonthlySchedule(getMonthlySchedule());
-  }, []);
+    fetchTrackingData();
+  }, [fetchTrackingData]);
 
-  const currentMonthData = monthlySchedule.find(s => s.month === selectedMonth);
+  if (loading && !data) {
+    return <div className="flex-center" style={{ minHeight: '60vh' }}><div className="spinner"></div></div>;
+  }
 
-  const calculateStats = (donors) => {
-    const total = donors?.length || 0;
-    const paid = donors?.filter(d => d.status === 'paid').length || 0;
-    const pending = total - paid;
-    const totalExpected = donors?.reduce((sum, d) => sum + d.expectedAmount, 0) || 0;
-    const totalPaid = donors?.filter(d => d.status === 'paid').reduce((sum, d) => sum + d.expectedAmount, 0) || 0;
-
-    return { total, paid, pending, totalExpected, totalPaid };
-  };
-
-  const stats = currentMonthData ? calculateStats(currentMonthData.donors) : {};
+  const { stats, paidList, pendingList } = data || { stats: {}, paidList: [], pendingList: [] };
 
   return (
-    <main>
-      <div className="page-header">
-        <h1>📅 Monthly Tracking</h1>
-        <p>Track which donors have paid this month for Idara</p>
-      </div>
-
-      <div className="card">
-        <div className="card-header">
-          <h3>Select Month</h3>
+    <div className="container-fluid">
+      <header className="page-header">
+        <div>
+          <h1>📅 Monthly Tracking - {currentMonthName} {currentYear}</h1>
+          <p>Current month status of monthly donor subscriptions</p>
         </div>
-        <div className="form-group">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            style={{ maxWidth: '300px' }}
-          >
-            {monthlySchedule.map(schedule => (
-              <option key={schedule.month} value={schedule.month}>
-                {schedule.month}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+        <Link href="/monthly-tracking/history" className="btn btn-outline">
+          📜 View Payment History
+        </Link>
+      </header>
 
-      {currentMonthData && (
-        <>
-          <div className="stats-grid">
-            <div className="stat-card primary">
-              <div className="stat-card-label">Total Donors</div>
-              <div className="stat-card-value">{stats.total}</div>
-              <small>Monthly Donors</small>
-            </div>
-
-            <div className="stat-card success">
-              <div className="stat-card-label">Paid</div>
-              <div className="stat-card-value">{stats.paid}</div>
-              <small>Payments Received</small>
-            </div>
-
-            <div className="stat-card warning">
-              <div className="stat-card-label">Pending</div>
-              <div className="stat-card-value">{stats.pending}</div>
-              <small>Awaiting Payment</small>
-            </div>
-
-            <div className="stat-card primary">
-              <div className="stat-card-label">Expected Amount</div>
-              <div className="stat-card-value">Rs. {stats.totalExpected?.toLocaleString()}</div>
-              <small>Target Collection</small>
-            </div>
-
-            <div className="stat-card success">
-              <div className="stat-card-label">Collected</div>
-              <div className="stat-card-value">Rs. {stats.totalPaid?.toLocaleString()}</div>
-              <small>Amount Received</small>
-            </div>
-
-            <div className="stat-card warning">
-              <div className="stat-card-label">Remaining</div>
-              <div className="stat-card-value">Rs. {(stats.totalExpected - stats.totalPaid)?.toLocaleString()}</div>
-              <small>Outstanding</small>
-            </div>
+      {/* Stats Section */}
+      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+        <div className="stat-card primary">
+          <span className="stat-label">Expected Donors</span>
+          <span className="stat-value">{stats.paidCount + pendingList.length}</span>
+          <div className="progress-bar" style={{ marginTop: '0.5rem' }}>
+            <div 
+              className="progress-fill" 
+              style={{ width: `${(stats.paidCount / ((stats.paidCount + pendingList.length) || 1)) * 100}%`, background: 'white' }}
+            ></div>
           </div>
+        </div>
 
-          <div className="card">
-            <div className="card-header">
-              <h3>{selectedMonth} - Details</h3>
+        <div className="stat-card success">
+          <span className="stat-label">Paid</span>
+          <span className="stat-value">{stats.paidCount}</span>
+          <span className="stat-sub">Payments Received</span>
+        </div>
+
+        <div className="stat-card warning">
+          <span className="stat-label">Pending</span>
+          <span className="stat-value">{pendingList.length}</span>
+          <span className="stat-sub">Active Donors Remaining</span>
+        </div>
+
+        <div className="stat-card success">
+          <span className="stat-label">Collected</span>
+          <span className="stat-value">Rs. {stats.totalCollected?.toLocaleString()}</span>
+          <span className="stat-sub">Total for {currentMonthName}</span>
+        </div>
+      </div>
+
+      <div className="grid-2" style={{ alignItems: 'start' }}>
+        {/* Pending List */}
+        <section className="card" style={{ borderTop: '4px solid var(--warning)' }}>
+          <div className="card-header" style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>⏳</span>
+              <div>
+                <h3 style={{ margin: 0 }}>Pending Payments</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Donors who haven't paid for {currentMonthName}</p>
+              </div>
             </div>
-
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Donor Name</th>
-                    <th>Expected Amount</th>
-                    <th>Status</th>
-                    <th>Payment Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentMonthData.donors && currentMonthData.donors.length > 0 ? (
-                    currentMonthData.donors.map((donor, index) => (
-                      <tr key={index}>
-                        <td>{donor.donorName}</td>
-                        <td>Rs. {donor.expectedAmount?.toLocaleString()}</td>
-                        <td>
-                          <span className={`badge badge-${donor.status === 'paid' ? 'success' : 'pending'}`}>
-                            {donor.status === 'paid' ? '✓ Paid' : '⏳ Pending'}
-                          </span>
-                        </td>
-                        <td>{donor.paidDate || '-'}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" style={{ textAlign: 'center', color: '#7f8c8d' }}>
-                        No data available
+            <span className="badge badge-warning">{pendingList.length}</span>
+          </div>
+          
+          <div className="table-container" style={{ marginTop: '1rem' }}>
+            <table className="compact-table">
+              <thead>
+                <tr>
+                  <th>Donor</th>
+                  <th>Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingList.length > 0 ? (
+                  pendingList.map(donor => (
+                    <tr key={donor._id}>
+                      <td>
+                        <div style={{ fontWeight: '600' }}>{donor.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{donor.phone || 'No phone'}</div>
+                      </td>
+                      <td style={{ fontWeight: '600', color: 'var(--warning)' }}>
+                        Rs. {donor.monthlyAmount?.toLocaleString()}
+                      </td>
+                      <td>
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                          onClick={() => window.location.href='/payments'}
+                        >
+                          💸 Pay
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--success)', fontWeight: '600' }}>
+                      🎉 All monthly donors have paid!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </>
-      )}
-    </main>
+        </section>
+
+        {/* Paid List */}
+        <section className="card" style={{ borderTop: '4px solid var(--success)' }}>
+          <div className="card-header" style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>✅</span>
+              <div>
+                <h3 style={{ margin: 0 }}>Recently Paid</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Monthly subscriptions received for {currentMonthName}</p>
+              </div>
+            </div>
+            <span className="badge badge-success">{paidList.length}</span>
+          </div>
+
+          <div className="table-container" style={{ marginTop: '1rem' }}>
+            <table className="compact-table">
+              <thead>
+                <tr>
+                  <th>Donor</th>
+                  <th>Received</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paidList.length > 0 ? (
+                  paidList.map(donor => (
+                    <tr key={donor._id}>
+                      <td>
+                        <div style={{ fontWeight: '600' }}>{donor.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: {donor.receiptId}</div>
+                      </td>
+                      <td style={{ fontWeight: '600', color: 'var(--success)' }}>
+                        Rs. {donor.amountPaid?.toLocaleString()}
+                      </td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {new Date(donor.paidDate).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      No payments received for this month yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <style jsx>{`
+        .compact-table th {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 0.5rem;
+        }
+        .compact-table td {
+          padding: 0.75rem 0.5rem;
+          font-size: 0.9rem;
+        }
+        .progress-bar {
+          width: 100%;
+          height: 4px;
+          background: rgba(255,255,255,0.3);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+        .progress-fill {
+          height: 100%;
+          transition: width 0.3s ease;
+        }
+      `}</style>
+    </div>
   );
 }
+

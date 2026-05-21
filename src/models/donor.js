@@ -8,14 +8,27 @@ const donorSchema = new mongoose.Schema(
       trim: true,
     },
 
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+
     phone: {
       type: String,
       trim: true,
+      unique: true,
+    },
+
+    address: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     type: {
       type: String,
-      enum: ["monthly", "occasional", "internal"],
+      enum: ["monthly", "occasional", "onetime"],
       default: "monthly",
     },
 
@@ -32,4 +45,9 @@ const donorSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Donor || mongoose.model("Donor", donorSchema);
+// 🧠 Force clear model from cache to resolve potential caching issues
+if (mongoose.models.Donor) {
+  delete mongoose.models.Donor;
+}
+
+export default mongoose.model("Donor", donorSchema);

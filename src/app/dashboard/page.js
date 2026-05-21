@@ -2,195 +2,134 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getDashboardStats, getPayments, getDonors } from '@/lib/dataStore';
-import { SearchBox, Pagination } from '@/components/SearchPagination';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [allPayments, setAllPayments] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const itemsPerPage = 5;
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/dashboard/stats');
+      const result = await res.json();
+      if (res.ok) {
+        setData(result);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const dashboardStats = getDashboardStats();
-    setStats(dashboardStats);
-    
-    const payments = getPayments();
-    setAllPayments(payments.slice().reverse());
+    fetchDashboardData();
   }, []);
 
-  const filteredPayments = allPayments.filter(payment =>
-    payment.donorId?.toString().includes(searchTerm) ||
-    payment.month?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.date?.includes(searchTerm)
-  );
-
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedPayments = filteredPayments.slice(startIndex, startIndex + itemsPerPage);
-
-  if (!stats) {
-    return <div className="spinner"></div>;
+  if (loading && !data) {
+    return <div className="flex-center" style={{ minHeight: '60vh' }}><div className="spinner"></div></div>;
   }
 
+  const { counts, currentMonth, lifetimeTotal, recentPayments } = data || { 
+    counts: { totalDonors: 0, monthlyDonors: 0 }, 
+    currentMonth: { total: 0, count: 0 }, 
+    lifetimeTotal: 0,
+    recentPayments: []
+  };
+
   return (
-    <main>
-      <div className="page-header">
-        <h1>🕌 Dashboard</h1>
-        <p>Idara Maheria Ghafooria - Fund Management & Charity Tracking</p>
-      </div>
+    <div className="container-fluid">
+      <header className="page-header">
+        <div>
+          <h1>🕌 Dashboard Overview</h1>
+          <p>Idara Maheria Ghafooria - Real-time Donation & Donor Analytics</p>
+        </div>
+        <button className="btn btn-outline" onClick={fetchDashboardData} disabled={loading}>
+          {loading ? '...' : '🔄 Refresh Stats'}
+        </button>
+      </header>
 
       <div className="stats-grid">
         <div className="stat-card primary">
-          <div className="stat-card-label">☪️ Total Donors</div>
-          <div className="stat-card-value">{stats.totalDonors}</div>
-          <small>Active Contributors</small>
+          <span className="stat-label">☪️ Total Active Donors</span>
+          <span className="stat-value">{counts.totalDonors}</span>
+          <span className="stat-sub">Overall Members</span>
         </div>
         
         <div className="stat-card primary">
-          <div className="stat-card-label">🕌 Monthly Donors</div>
-          <div className="stat-card-value">{stats.monthlyDonors}</div>
-          <small>Regular Contributors</small>
+          <span className="stat-label">📅 Monthly Subscribers</span>
+          <span className="stat-value">{counts.monthlyDonors}</span>
+          <span className="stat-sub">Regular Contributors</span>
         </div>
         
         <div className="stat-card success">
-          <div className="stat-card-label">💰 Monthly Target</div>
-          <div className="stat-card-value">Rs. {stats.totalMonthlyAmount.toLocaleString()}</div>
-          <small>Expected Monthly</small>
+          <span className="stat-label">✅ Total Collected ({currentMonth.label})</span>
+          <span className="stat-value">Rs. {currentMonth.total.toLocaleString()}</span>
+          <span className="stat-sub">{currentMonth.count} Total Payments in {currentMonth.label}</span>
         </div>
         
-        <div className="stat-card success">
-          <div className="stat-card-label">✅ Total Collected</div>
-          <div className="stat-card-value">Rs. {stats.totalCollected.toLocaleString()}</div>
-          <small>Amount Received</small>
-        </div>
-        
-        <div className="stat-card warning">
-          <div className="stat-card-label">⏳ Pending Donations</div>
-          <div className="stat-card-value">{stats.pendingPayments}</div>
-          <small>Awaiting Confirmation</small>
-        </div>
-        
-        <div className="stat-card success">
-          <div className="stat-card-label">Confirmed Payments</div>
-          <div className="stat-card-value">{stats.paidPayments}</div>
-          <small>Completed</small>
+        <div className="stat-card success" style={{ background: 'var(--primary-dark)', color: 'white' }}>
+          <span className="stat-label" style={{ color: 'rgba(255,255,255,0.7)' }}>💰 Lifetime Collection</span>
+          <span className="stat-value" style={{ color: 'white' }}>Rs. {lifetimeTotal.toLocaleString()}</span>
+          <span className="stat-sub" style={{ color: 'rgba(255,255,255,0.6)' }}>Total Fund to Date</span>
         </div>
       </div>
 
       <div className="grid-2">
-        <div className="card">
+        <section className="card">
           <div className="card-header">
-            <h3>Quick Actions</h3>
+            <h3>Quick Management</h3>
           </div>
-          <div className="btn-group" style={{ flexDirection: 'column', gap: '0.75rem' }}>
-            <Link href="/donors" className="btn btn-secondary" style={{ width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Link href="/donors" className="btn btn-primary" style={{ padding: '1rem' }}>
               ✏️ Manage Donors
             </Link>
-            <Link href="/monthly-tracking" className="btn btn-secondary" style={{ width: '100%' }}>
-              📅 Monthly Tracking
-            </Link>
-            <Link href="/payments" className="btn btn-secondary" style={{ width: '100%' }}>
+            <Link href="/payments" className="btn btn-secondary" style={{ padding: '1rem' }}>
               💳 Record Payment
             </Link>
-            <Link href="/reports" className="btn btn-secondary" style={{ width: '100%' }}>
-              📈 View Reports
+            <Link href="/monthly-tracking" className="btn btn-outline" style={{ padding: '1rem' }}>
+              📅 Monthly Tracking
+            </Link>
+            <Link href="/donors/audit" className="btn btn-outline" style={{ padding: '1rem' }}>
+              🔎 Donor History
             </Link>
           </div>
-        </div>
+        </section>
 
-        <div className="card">
+        <section className="card">
           <div className="card-header">
-            <h3>System Info</h3>
+            <h3>Recent Transactions</h3>
           </div>
-          <div className="alert alert-info" style={{ margin: 0 }}>
-            <strong>ℹ️ Note:</strong> This system tracks both monthly and one-time donations. Admins manually record cash payments and mark them as paid.
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: '2rem' }}>
-        <div className="card-header">
-          <h3>Recent Payments</h3>
-          <Link href="/reports" className="btn btn-small btn-outline">
-            View All
-          </Link>
-        </div>
-
-        <SearchBox 
-          value={searchTerm} 
-          onChange={(value) => {
-            setSearchTerm(value);
-            setCurrentPage(1);
-          }} 
-          placeholder="Search by donor ID, month, or date..."
-        />
-        
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Donor ID</th>
-                <th>Amount</th>
-                <th>Month</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Receipt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPayments.length > 0 ? (
-                paginatedPayments.map(payment => (
-                  <tr key={payment.id}>
-                    <td>#{payment.donorId}</td>
-                    <td>Rs. {payment.amount.toLocaleString()}</td>
-                    <td>{payment.month}</td>
-                    <td>{payment.date}</td>
-                    <td>
-                      <span className={`badge badge-${payment.status === 'paid' ? 'success' : 'pending'}`}>
-                        {payment.status === 'paid' ? '✓ Paid' : '⏳ Pending'}
-                      </span>
-                    </td>
-                    <td>
-                      {payment.receiptId ? (
-                        <span style={{ color: '#27ae60', fontWeight: 'bold' }}>
-                          {payment.receiptId}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#7f8c8d' }}>-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
+          <div className="table-container" style={{ border: 'none' }}>
+            <table style={{ fontSize: '0.9rem' }}>
+              <thead>
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', color: '#7f8c8d' }}>
-                    No payments recorded
-                  </td>
+                  <th>Donor</th>
+                  <th>Amount</th>
+                  <th>Type</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredPayments.length > 0 && totalPages > 1 && (
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredPayments.length}
-          />
-        )}
-
-        {filteredPayments.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '1rem', color: '#7f8c8d' }}>
-            {searchTerm ? 'No payments match your search' : 'No payments recorded'}
+              </thead>
+              <tbody>
+                {recentPayments.length > 0 ? (
+                  recentPayments.map(p => (
+                    <tr key={p._id}>
+                      <td style={{ fontWeight: '600' }}>{p.donorName}</td>
+                      <td style={{ color: 'var(--primary)', fontWeight: '700' }}>Rs. {p.amount.toLocaleString()}</td>
+                      <td><span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{p.type.toUpperCase()}</span></td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="3" style={{ textAlign: 'center', color: '#999' }}>No recent records</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+          <Link href="/monthly-tracking/history" style={{ display: 'block', textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', fontWeight: '600' }}>
+            View Full Transaction History →
+          </Link>
+        </section>
       </div>
-    </main>
+    </div>
   );
 }
+
