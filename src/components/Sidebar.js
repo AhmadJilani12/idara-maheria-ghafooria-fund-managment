@@ -117,8 +117,8 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '1.5rem 0' }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <ul style={{ listStyle: 'none', padding: '1.5rem 0', margin: 0, flex: 1, overflowY: 'auto' }}>
             {menuItems.map((item) => (
               <li key={item.href} style={{ marginBottom: '0.5rem' }}>
                 <Link
@@ -144,24 +144,29 @@ export default function Sidebar() {
               </li>
             ))}
           </ul>
+
+          {/* Footer / Logout */}
+          <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <button
+              onClick={handleLogout}
+              className="btn"
+              style={{
+                width: '100%',
+                background: 'rgba(220, 53, 69, 0.2)',
+                color: '#ff8a93',
+                border: '1px solid rgba(220, 53, 69, 0.4)',
+                justifyContent: 'center',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              🚪 Logout
+            </button>
+          </div>
         </nav>
 
-        {/* Footer / Logout */}
-        <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button
-            onClick={handleLogout}
-            className="btn"
-            style={{
-              width: '100%',
-              background: 'rgba(220, 53, 69, 0.2)',
-              color: '#ff8a93',
-              border: '1px solid rgba(220, 53, 69, 0.4)',
-              justifyContent: 'center'
-            }}
-          >
-            🚪 Logout
-          </button>
-        </div>
+
       </aside>
     </>
   );
