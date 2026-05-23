@@ -58,7 +58,6 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
               required
             />
           </div>
@@ -69,7 +68,6 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
               required
             />
           </div>
@@ -82,21 +80,6 @@ export default function LoginPage() {
             Sign In
           </button>
         </form>
-
-        <div style={{ 
-          marginTop: '2rem', 
-          padding: '1rem', 
-          backgroundColor: 'var(--bg-main)', 
-          borderRadius: 'var(--radius)', 
-          fontSize: '0.85rem',
-          border: '1px solid var(--border)'
-        }}>
-          <p style={{ fontWeight: '700', marginBottom: '0.5rem' }}>Demo Credentials:</p>
-          <div style={{ display: 'grid', gap: '0.25rem', color: 'var(--text-muted)' }}>
-            <p>Email: <strong>admin@example.com</strong></p>
-            <p>Password: <strong>admin123</strong></p>
-          </div>
-        </div>
       </div>
     </div>
   );

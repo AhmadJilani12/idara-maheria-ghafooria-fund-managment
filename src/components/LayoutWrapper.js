@@ -19,10 +19,14 @@ function LayoutContent({ children }) {
   useEffect(() => {
     if (!mounted || loading) return;
     
-    if (!user && pathname !== '/login') {
-      router.push('/login');
-    } else if (user && pathname === '/login') {
-      router.push('/dashboard');
+    if (!user) {
+      if (pathname !== '/login') {
+        router.push('/login');
+      }
+    } else {
+      if (pathname === '/login' || pathname === '/') {
+        router.push('/dashboard');
+      }
     }
   }, [mounted, user, loading, pathname, router]);
 
@@ -49,9 +53,14 @@ function LayoutContent({ children }) {
     return children;
   }
 
-  // If user is not logged in and not on login page, redirect
+  // If user is not logged in and trying to access a protected page, 
+  // show nothing/spinner while the useEffect redirect happens
   if (!user) {
-    return children;
+    return (
+      <div className="flex-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner"></div>
+      </div>
+    );
   }
 
   return (

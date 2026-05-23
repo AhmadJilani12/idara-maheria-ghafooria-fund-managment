@@ -31,6 +31,12 @@ export async function GET(request) {
       type: "monthly"
     });
 
+    // 2.1 Get all other donations for this specific month (for history view)
+    const otherDonations = await Donation.find({
+      month: targetMonthString,
+      type: { $ne: "monthly" }
+    });
+
     // 3. Create a map of paid donor IDs for quick lookup
     const paidDonorIds = new Set(
       monthlyDonations
@@ -59,7 +65,8 @@ export async function GET(request) {
           phone: donor.phone,
           paidDate: donation?.date,
           receiptId: donation?.receiptId,
-          amountPaid: donation?.amount
+          amountPaid: donation?.amount,
+          type: "monthly"
         });
         totalCollected += donation?.amount || 0;
         totalExpected += donor.monthlyAmount || 0; // Add to expected because they actually paid
@@ -75,11 +82,26 @@ export async function GET(request) {
       }
     });
 
+    // Add other donations to paidList
+    otherDonations.forEach(donation => {
+      paidList.push({
+        _id: donation._id,
+        name: donation.donorName,
+        phone: donation.phone,
+        paidDate: donation.date,
+        receiptId: donation.receiptId,
+        amountPaid: donation.amount,
+        type: donation.type || "other"
+      });
+      totalCollected += donation.amount || 0;
+    });
+
     return NextResponse.json({
       month: targetMonthString,
       stats: {
         totalDonors: monthlyDonors.length,
-        paidCount: paidList.length,
+        paidCount: paidList.filter(p => p.type === 'monthly').length,
+        otherCount: otherDonations.length,
         pendingCount: pendingList.length,
         totalExpected,
         totalCollected,

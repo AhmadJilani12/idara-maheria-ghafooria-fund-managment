@@ -146,7 +146,7 @@ export default function MonthlyTrackingPage() {
                 <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>Monthly subscriptions received for {currentMonthName}</p>
               </div>
             </div>
-            <span className="badge badge-success">{paidList.length}</span>
+            <span className="badge badge-success">{paidList.filter(p => p.type === 'monthly').length}</span>
           </div>
 
           <div className="table-container" style={{ marginTop: '1rem' }}>
@@ -159,8 +159,8 @@ export default function MonthlyTrackingPage() {
                 </tr>
               </thead>
               <tbody>
-                {paidList.length > 0 ? (
-                  paidList.map(donor => (
+                {paidList.filter(p => p.type === 'monthly').length > 0 ? (
+                  paidList.filter(p => p.type === 'monthly').map(donor => (
                     <tr key={donor._id}>
                       <td>
                         <div style={{ fontWeight: '600' }}>{donor.name}</div>
