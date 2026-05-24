@@ -47,15 +47,12 @@ export async function GET(request) {
     // 4. Process donors into paid and pending lists
     const paidList = [];
     const pendingList = [];
-    let totalCollected = 0;
-    let totalExpected = 0;
+    let monthlyCollected = 0;
+    let otherCollected = 0;
+    let monthlyExpected = 0;
 
     monthlyDonors.forEach(donor => {
       const isPaid = paidDonorIds.has(donor._id.toString());
-      
-      // LOGIC: 
-      // - If PAID: Always show in paid list (even if now inactive)
-      // - If NOT PAID: Only show in pending list if donor IS ACTIVE
       
       if (isPaid) {
         const donation = monthlyDonations.find(d => d.donorId?.toString() === donor._id.toString());
@@ -68,17 +65,16 @@ export async function GET(request) {
           amountPaid: donation?.amount,
           type: "monthly"
         });
-        totalCollected += donation?.amount || 0;
-        totalExpected += donor.monthlyAmount || 0; // Add to expected because they actually paid
+        monthlyCollected += donation?.amount || 0;
+        monthlyExpected += donor.monthlyAmount || 0;
       } else if (donor.isActive) {
-        // Only add to pending if the donor is currently active
         pendingList.push({
           _id: donor._id,
           name: donor.name,
           phone: donor.phone,
           monthlyAmount: donor.monthlyAmount,
         });
-        totalExpected += donor.monthlyAmount || 0;
+        monthlyExpected += donor.monthlyAmount || 0;
       }
     });
 
@@ -93,7 +89,7 @@ export async function GET(request) {
         amountPaid: donation.amount,
         type: donation.type || "other"
       });
-      totalCollected += donation.amount || 0;
+      otherCollected += donation.amount || 0;
     });
 
     return NextResponse.json({
@@ -103,9 +99,11 @@ export async function GET(request) {
         paidCount: paidList.filter(p => p.type === 'monthly').length,
         otherCount: otherDonations.length,
         pendingCount: pendingList.length,
-        totalExpected,
-        totalCollected,
-        remaining: totalExpected - totalCollected
+        monthlyExpected,
+        monthlyCollected,
+        monthlyPending: monthlyExpected - monthlyCollected,
+        otherCollected,
+        grandTotal: monthlyCollected + otherCollected
       },
       paidList,
       pendingList

@@ -50,32 +50,32 @@ export default function MonthlyTrackingPage() {
       {/* Stats Section */}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stat-card primary">
-          <span className="stat-label">Expected Donors</span>
-          <span className="stat-value">{stats.paidCount + pendingList.length}</span>
+          <span className="stat-label">Expected (Monthly)</span>
+          <span className="stat-value">Rs. {stats.monthlyExpected?.toLocaleString()}</span>
           <div className="progress-bar" style={{ marginTop: '0.5rem' }}>
             <div 
               className="progress-fill" 
-              style={{ width: `${(stats.paidCount / ((stats.paidCount + pendingList.length) || 1)) * 100}%`, background: 'white' }}
+              style={{ width: `${(stats.monthlyCollected / (stats.monthlyExpected || 1)) * 100}%`, background: 'white' }}
             ></div>
           </div>
         </div>
 
         <div className="stat-card success">
-          <span className="stat-label">Paid</span>
-          <span className="stat-value">{stats.paidCount}</span>
-          <span className="stat-sub">Payments Received</span>
+          <span className="stat-label">Collected (Monthly)</span>
+          <span className="stat-value">Rs. {stats.monthlyCollected?.toLocaleString()}</span>
+          <span className="stat-sub">Monthly Subs Only</span>
         </div>
 
         <div className="stat-card warning">
-          <span className="stat-label">Pending</span>
-          <span className="stat-value">{pendingList.length}</span>
-          <span className="stat-sub">Active Donors Remaining</span>
+          <span className="stat-label">Pending (Monthly)</span>
+          <span className="stat-value">Rs. {stats.monthlyPending?.toLocaleString()}</span>
+          <span className="stat-sub">Amount to be collected</span>
         </div>
 
         <div className="stat-card success">
-          <span className="stat-label">Collected</span>
-          <span className="stat-value">Rs. {stats.totalCollected?.toLocaleString()}</span>
-          <span className="stat-sub">Total for {currentMonthName}</span>
+          <span className="stat-label">Total Collected</span>
+          <span className="stat-value" style={{ color: 'var(--primary-dark)' }}>Rs. {stats.grandTotal?.toLocaleString()}</span>
+          <span className="stat-sub">Subs + Extra Donations</span>
         </div>
       </div>
 
