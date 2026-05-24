@@ -192,29 +192,30 @@ export default function Receipt({ data, onClose }) {
         }
 
         @media print {
-          /* 1. COMPLETELY HIDE EVERYTHING ELSE */
-          html, body, #__next, .RootLayoutWrapper, main, .main-content, .sidebar, aside, nav, header, footer, .container-fluid, .page-header, .card, section {
+          /* 1. HIDE EVERYTHING EXCEPT THE RECEIPT */
+          body > *:not(.receipt-overlay) {
             display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
           }
 
-          /* 2. SHOW ONLY THE PORTALED OVERLAY */
-          body > .receipt-overlay {
-            display: block !important;
-            visibility: visible !important;
+          /* 2. RESET BODY FOR PRINT */
+          body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+          }
+
+          /* 3. SHOW AND POSITION THE PORTALED OVERLAY */
+          .receipt-overlay {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
-            height: auto !important;
+            display: block !important;
             background: white !important;
             padding: 0 !important;
             margin: 0 !important;
-            overflow: visible !important;
-            z-index: 999999 !important;
+            z-index: 99999 !important;
           }
 
           .receipt-modal-container {
