@@ -33,14 +33,38 @@ export default function Sidebar() {
     setIsOpen(false);
   };
 
-  const menuItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { href: '/donors', label: 'Manage Donors', icon: '☪️' },
-    { href: '/monthly-tracking', label: 'Monthly Tracking', icon: '📅' },
-    { href: '/monthly-tracking/history?filter=others', label: 'Extra Donations', icon: '🎁' },
-    { href: '/payments', label: 'Record Payment', icon: '💰' },
-    { href: '/donors/audit', label: 'Donor History', icon: '🔎' },
-    { href: '/monthly-tracking/verify', label: 'Verify Receipt', icon: '🧾' },
+  const menuSections = [
+    {
+      title: 'General',
+      items: [
+        { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
+      ]
+    },
+    {
+      title: 'Fund Management',
+      items: [
+        { href: '/donors', label: 'Manage Donors', icon: '☪️' },
+        { href: '/monthly-tracking', label: 'Monthly Tracking', icon: '📅' },
+        { href: '/monthly-tracking/history?filter=others', label: 'Extra Donations', icon: '🎁' },
+        { href: '/payments', label: 'Record Payment', icon: '💰' },
+        { href: '/donors/audit', label: 'Donor History', icon: '🔎' },
+        { href: '/monthly-tracking/verify', label: 'Verify Receipt', icon: '🧾' },
+      ]
+    },
+    {
+      title: 'Staff Management',
+      items: [
+        { href: '/teachers', label: 'Teachers', icon: '👨‍🏫' },
+        { href: '/attendance', label: 'Attendance', icon: '📝' },
+        { href: '/face-test', label: 'Face AI Test', icon: '🔬' },
+      ]
+    },
+    {
+      title: 'Expense Management',
+      items: [
+        { href: '/expenses', label: 'Expenses', icon: '📉' },
+      ]
+    }
   ];
 
   if (!mounted) return <div style={{ width: isMobile ? '0' : '250px' }} />;
@@ -113,37 +137,53 @@ export default function Sidebar() {
         <div style={{ padding: '2.5rem 1.5rem', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ fontSize: '3rem', marginBottom: '0.5rem', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }}>🕌</div>
           <h2 style={{ color: 'white', margin: 0, fontSize: '1.25rem', letterSpacing: '1px' }}>Idara Maheria</h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>Ghafooria Fund System</p>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: '0.25rem 0 0' }}>Management System</p>
         </div>
 
         {/* Navigation */}
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <ul style={{ listStyle: 'none', padding: '1.5rem 0', margin: 0, flex: 1, overflowY: 'auto' }}>
-            {menuItems.map((item) => (
-              <li key={item.href} style={{ marginBottom: '0.5rem' }}>
-                <Link
-                  href={item.href}
-                  onClick={() => isMobile && setIsOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    padding: '0.875rem 1.5rem',
-                    color: isActive(item.href) ? 'white' : 'rgba(255,255,255,0.7)',
-                    background: isActive(item.href) ? 'rgba(255,255,255,0.15)' : 'transparent',
-                    textDecoration: 'none',
-                    fontSize: '0.95rem',
-                    fontWeight: isActive(item.href) ? '600' : '400',
-                    borderLeft: `4px solid ${isActive(item.href) ? 'var(--accent)' : 'transparent'}`,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              </li>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0' }}>
+            {menuSections.map((section) => (
+              <div key={section.title} style={{ marginBottom: '1.5rem' }}>
+                <div style={{ 
+                  padding: '0 1.5rem', 
+                  fontSize: '0.7rem', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '2px', 
+                  color: 'rgba(255,255,255,0.4)',
+                  marginBottom: '0.5rem'
+                }}>
+                  {section.title}
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {section.items.map((item) => (
+                    <li key={item.href} style={{ marginBottom: '0.25rem' }}>
+                      <Link
+                        href={item.href}
+                        onClick={() => isMobile && setIsOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          padding: '0.75rem 1.5rem',
+                          color: isActive(item.href) ? 'white' : 'rgba(255,255,255,0.7)',
+                          background: isActive(item.href) ? 'rgba(255,255,255,0.15)' : 'transparent',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          fontWeight: isActive(item.href) ? '600' : '400',
+                          borderLeft: `4px solid ${isActive(item.href) ? 'var(--accent)' : 'transparent'}`,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
 
           {/* Footer / Logout */}
           <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
