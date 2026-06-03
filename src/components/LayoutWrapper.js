@@ -19,8 +19,12 @@ function LayoutContent({ children }) {
   useEffect(() => {
     if (!mounted || loading) return;
     
+    // Allow public access to /login and /scan
+    const publicPaths = ['/login', '/scan'];
+    const isPublicPath = publicPaths.includes(pathname);
+
     if (!user) {
-      if (pathname !== '/login') {
+      if (!isPublicPath) {
         router.push('/login');
       }
     } else {
@@ -48,8 +52,8 @@ function LayoutContent({ children }) {
     );
   }
 
-  // Show login page without layout
-  if (pathname === '/login') {
+  // Show login and public pages without sidebar/layout
+  if (pathname === '/login' || pathname === '/scan') {
     return children;
   }
 
