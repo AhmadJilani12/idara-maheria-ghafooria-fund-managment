@@ -76,12 +76,13 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
   // Recognition Loop
   useEffect(() => {
     let interval;
-    let matchCounter = 0; // Buffer to ensure stable recognition
-    const REQUIRED_MATCHES = 3; // Consecutive matches needed
+    let matchCounter = 0; 
+    let isProcessing = false; // Prevents multiple rapid submissions
+    const REQUIRED_MATCHES = 3; 
 
     if (recognizing && videoRef.current) {
       interval = setInterval(async () => {
-        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState < 2) {
+        if (isProcessing || !videoRef.current || videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState < 2) {
           return;
         }
 
@@ -95,8 +96,8 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
             .withFaceDescriptor();
 
           if (!detection) {
-            matchCounter = 0; // Reset if face lost
-            setMessage('Scanning... Please look at the camera.');
+            matchCounter = 0; 
+            setMessage('Face not detected. Please look at the camera.');
             return;
           }
 
@@ -124,20 +125,28 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
               setMessage(`Recognizing... (${matchCounter}/${REQUIRED_MATCHES})`);
               
               if (matchCounter >= REQUIRED_MATCHES) {
+                isProcessing = true; // Block further processing
                 const matchedTeacher = teachers.find(t => t._id === match.label);
+                
                 if (matchedTeacher) {
-                  const currentTime = new Date().toLocaleTimeString();
                   setRecognizing(false);
                   if (videoRef.current) {
                     videoRef.current.pause();
                   }
-                  setMessage(`✅ ${matchedTeacher.name} verified!\nTime: ${currentTime}`);
+                  
+                  // Stop camera immediately
+                  if (videoRef.current?.srcObject) {
+                    videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                  }
+
+                  setMessage(`✅ ${matchedTeacher.name} verified!`);
+                  
+                  // Final delay before triggering parent callback
                   setTimeout(() => {
-                    if (videoRef.current?.srcObject) {
-                      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-                    }
                     onMatch(matchedTeacher._id);
-                  }, 1500);
+                  }, 2000); // 2 second delay for UX
+                } else {
+                  isProcessing = false; // Reset if teacher not found
                 }
               }
             } else {
@@ -147,10 +156,16 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           }
         } catch (err) {
           console.error("Loop error:", err);
+          isProcessing = false;
         }
-      }, 200); // Faster polling (200ms)
+      }, 200);
     }
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [recognizing, teachers, onMatch]);
 
   return (
