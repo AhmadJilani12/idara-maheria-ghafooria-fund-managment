@@ -144,7 +144,11 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           autoPlay
           muted
           playsInline
-          style={{ width: '100%', display: 'block' }}
+          style={{ 
+            width: '100%', 
+            display: 'block',
+            transform: 'scaleX(-1)' // Mirror effect
+          }}
         />
         <div style={{
           position: 'absolute',

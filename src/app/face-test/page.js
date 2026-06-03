@@ -83,7 +83,16 @@ export default function FaceTestPage() {
       
       <div className="card" style={{ maxWidth: '600px', margin: 'auto' }}>
         <div style={{ position: 'relative', background: '#000' }}>
-          <video ref={videoRef} autoPlay muted style={{ width: '100%' }} />
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            muted 
+            playsInline
+            style={{ 
+              width: '100%',
+              transform: 'scaleX(-1)' // Mirror effect
+            }} 
+          />
           <div style={{
             position: 'absolute', bottom: 10, left: 10, right: 10,
             background: 'rgba(0,0,0,0.7)', color: '#fff', padding: '10px', borderRadius: '5px'
