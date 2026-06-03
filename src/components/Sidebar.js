@@ -56,6 +56,7 @@ export default function Sidebar() {
       items: [
         { href: '/teachers', label: 'Teachers', icon: '👨‍🏫' },
         { href: '/attendance', label: 'Attendance', icon: '📝' },
+        { href: '/attendance/history', label: 'Attendance History', icon: '📊' },
         { href: '/face-test', label: 'Face AI Test', icon: '🔬' },
       ]
     },
