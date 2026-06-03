@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 const attendanceSchema = new mongoose.Schema({
   teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
   date: { type: Date, required: true },
+  checkIn: { type: Date },
+  checkOut: { type: Date },
   status: { type: String, enum: ['Present', 'Absent', 'Leave'], default: 'Present' },
   note: { type: String },
 }, { timestamps: true });

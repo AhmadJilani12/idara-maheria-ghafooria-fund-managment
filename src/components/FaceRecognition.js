@@ -74,7 +74,6 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
     let interval;
     if (recognizing && videoRef.current) {
       interval = setInterval(async () => {
-        // Safety check to prevent the 'toNetInput' error
         if (!videoRef.current || videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState < 2) {
           return;
         }
@@ -85,8 +84,30 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
             .withFaceLandmarks()
             .withFaceDescriptor();
 
-          if (detection && faceMatcherRef.current) {
+          if (!detection) {
+            setMessage('❌ Face not found. Please look at the camera.');
+            return;
+          }
+
+          // Check Orientation (Basic Landmark Analysis)
+          const landmarks = detection.landmarks;
+          const nose = landmarks.getNose()[0];
+          const leftEye = landmarks.getLeftEye()[0];
+          const rightEye = landmarks.getRightEye()[0];
+          
+          // Simple check: if nose is too far from the center of eyes, they might be looking away
+          const eyesCenter = (leftEye.x + rightEye.x) / 2;
+          const eyeDist = rightEye.x - leftEye.x;
+          const noseOffset = nose.x - eyesCenter;
+
+          if (Math.abs(noseOffset) > eyeDist * 0.3) {
+            setMessage('⚠️ Please look straight at the camera.');
+            return;
+          }
+
+          if (faceMatcherRef.current) {
             const match = faceMatcherRef.current.findBestMatch(detection.descriptor);
+            
             if (match.label !== 'unknown') {
               const matchedTeacher = teachers.find(t => t._id === match.label);
               if (matchedTeacher) {
@@ -94,17 +115,18 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
                 setRecognizing(false);
                 setMessage(`✅ ${matchedTeacher.name}\nThank You!\nTime: ${currentTime}`);
                 
-                // Wait 2 seconds so they can see the message before closing
                 setTimeout(() => {
                   onMatch(matchedTeacher._id);
                 }, 2000);
               }
+            } else {
+              setMessage('❌ Face not matched. Are you registered?');
             }
           }
         } catch (err) {
           console.error("Loop error:", err);
         }
-      }, 1000);
+      }, 800); // Slightly faster loop for better feedback
     }
     return () => clearInterval(interval);
   }, [recognizing, teachers, onMatch]);

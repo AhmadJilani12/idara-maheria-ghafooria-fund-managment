@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Attendance from "@/models/attendance";
-import Teacher from "@/models/teacher";
 
 export async function GET(request) {
   try {
@@ -10,7 +9,6 @@ export async function GET(request) {
     const dateStr = searchParams.get('date');
     const date = dateStr ? new Date(dateStr) : new Date();
     
-    // Set to start and end of day
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
@@ -20,40 +18,62 @@ export async function GET(request) {
 
     return NextResponse.json(attendance);
   } catch (error) {
-    console.error("Error fetching attendance:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch attendance" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
     await connectDB();
-    const body = await request.json(); // Array of { teacherId, status, date, note }
+    const body = await request.json();
     
-    if (!Array.isArray(body)) {
-      return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
+    const now = new Date();
+    const today = new Date(body.date || now);
+    today.setHours(0, 0, 0, 0);
+
+    const hour = now.getHours();
+    
+    // Find existing record for today
+    let record = await Attendance.findOne({ teacherId: body.teacherId, date: today });
+
+    if (hour >= 6 && hour < 12) {
+      // CHECK-IN WINDOW (6 AM - 12 PM)
+      if (!record) {
+        record = await Attendance.create({
+          teacherId: body.teacherId,
+          date: today,
+          checkIn: now,
+          status: 'Present',
+          note: 'Face Scan Check-in'
+        });
+      } else {
+        return NextResponse.json({ message: "Already checked in today.", data: record });
+      }
+    } else if (hour >= 12) {
+      // CHECK-OUT WINDOW (After 12 PM)
+      if (record) {
+        record.checkOut = now;
+        record.note = (record.note || '') + ' | Face Scan Check-out';
+        await record.save();
+      } else {
+        // Teacher missed check-in but scanning for check-out
+        record = await Attendance.create({
+          teacherId: body.teacherId,
+          date: today,
+          checkIn: null, // Missed check-in window
+          checkOut: now,
+          status: 'Present',
+          note: 'Missed Check-in, Scanned for Check-out'
+        });
+      }
+    } else {
+      // Before 6 AM
+      return NextResponse.json({ error: "Attendance starts after 6:00 AM" }, { status: 400 });
     }
 
-    const results = await Promise.all(body.map(async (record) => {
-      const date = record.date ? new Date(record.date) : new Date();
-      date.setHours(0, 0, 0, 0);
-
-      return await Attendance.findOneAndUpdate(
-        { teacherId: record.teacherId, date },
-        { status: record.status, note: record.note || "" },
-        { upsert: true, new: true }
-      );
-    }));
-
-    return NextResponse.json(results, { status: 201 });
+    return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    console.error("Error saving attendance:", error);
-    return NextResponse.json(
-      { error: "Failed to save attendance", message: error.message },
-      { status: 500 }
-    );
+    console.error("Attendance Error:", error);
+    return NextResponse.json({ error: "Failed to save attendance" }, { status: 500 });
   }
 }
