@@ -53,7 +53,10 @@ export default function FaceEnrollment({ teacher, onComplete, onCancel }) {
     
     try {
       const detection = await faceapi
-        .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(
+          videoRef.current, 
+          new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })
+        )
         .withFaceLandmarks()
         .withFaceDescriptor();
 

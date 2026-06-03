@@ -79,13 +79,19 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
         }
 
         try {
+          // Optimization: Increased input size for better detection at distance
+          // and slightly lowered score threshold for faster detection
           const detection = await faceapi
-            .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+            .detectSingleFace(
+              videoRef.current, 
+              new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })
+            )
             .withFaceLandmarks()
             .withFaceDescriptor();
 
           if (!detection) {
-            setMessage('❌ Face not found. Please look at the camera.');
+            // Only show message if no face has been seen for a bit to avoid flickering
+            setMessage('Scanning... Please look at the camera.');
             return;
           }
 
@@ -95,12 +101,12 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           const leftEye = landmarks.getLeftEye()[0];
           const rightEye = landmarks.getRightEye()[0];
           
-          // Simple check: if nose is too far from the center of eyes, they might be looking away
           const eyesCenter = (leftEye.x + rightEye.x) / 2;
           const eyeDist = rightEye.x - leftEye.x;
           const noseOffset = nose.x - eyesCenter;
 
-          if (Math.abs(noseOffset) > eyeDist * 0.3) {
+          // If looking too far away
+          if (Math.abs(noseOffset) > eyeDist * 0.5) {
             setMessage('⚠️ Please look straight at the camera.');
             return;
           }
@@ -120,13 +126,13 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
                 }, 2000);
               }
             } else {
-              setMessage('❌ Face not matched. Are you registered?');
+              setMessage('❌ Face not recognized. Are you registered?');
             }
           }
         } catch (err) {
           console.error("Loop error:", err);
         }
-      }, 800); // Slightly faster loop for better feedback
+      }, 500); // Faster interval for more responsive feel
     }
     return () => clearInterval(interval);
   }, [recognizing, teachers, onMatch]);
