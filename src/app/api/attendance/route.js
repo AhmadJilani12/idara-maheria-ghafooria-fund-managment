@@ -37,54 +37,68 @@ export async function POST(request) {
     }
 
     const now = new Date();
-    // Ensure we use the date provided by the body (YYYY-MM-DD) or current local date
-    const dateStr = bodyDate || now.toISOString().split('T')[0];
+    
+    // Force Asia/Karachi (Pakistan) Timezone for consistent calculations
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Karachi',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: 'numeric',
+      hour12: false
+    });
+
+    const parts = formatter.formatToParts(now);
+    const getPart = (type) => parts.find(p => p.type === type).value;
+    
+    const pkYear = getPart('year');
+    const pkMonth = getPart('month');
+    const pkDay = getPart('day');
+    const pkHour = parseInt(getPart('hour'));
+    
+    // If bodyDate is provided, use it, otherwise use Pakistan local date
+    const dateStr = bodyDate || `${pkYear}-${pkMonth}-${pkDay}`;
     const today = new Date(dateStr + 'T00:00:00');
     
-    const hour = now.getHours();
-    console.log(`Attendance Scan: Teacher=${teacherId}, Hour=${hour}, Date=${dateStr}`);
+    console.log(`Attendance Scan (PK Time): Teacher=${teacherId}, Hour=${pkHour}, Date=${dateStr}`);
 
     // Find existing record for today
     let record = await Attendance.findOne({ teacherId, date: today });
 
-    if (hour >= 5 && hour < 12) {
-      // CHECK-IN WINDOW (5 AM - 12 PM) - Slightly expanded for flexibility
+    if (pkHour >= 5 && pkHour < 12) {
+      // CHECK-IN WINDOW (5 AM - 12 PM PKT)
       if (!record) {
         record = await Attendance.create({
           teacherId,
           date: today,
           checkIn: now,
           status: 'Present',
-          note: 'Face Scan Check-in'
+          note: 'Face Scan Check-in (PKT)'
         });
         console.log("Check-in created:", record._id);
       } else {
-        // If they scan again during check-in window, just return success
         return NextResponse.json({ message: "Already checked in.", data: record }, { status: 200 });
       }
-    } else if (hour >= 12 && hour < 23) {
-      // CHECK-OUT WINDOW (12 PM - 11 PM)
+    } else if (pkHour >= 12 && pkHour < 23) {
+      // CHECK-OUT WINDOW (12 PM - 11 PM PKT)
       if (record) {
-        // Only update check-out if it hasn't been set yet, or allow re-scan
         record.checkOut = now;
-        record.note = (record.note || '') + (record.note?.includes('Check-out') ? '' : ' | Face Scan Check-out');
+        record.note = (record.note || '') + (record.note?.includes('Check-out') ? '' : ' | Face Scan Check-out (PKT)');
         await record.save();
         console.log("Check-out updated:", record._id);
       } else {
-        // Teacher missed check-in but scanning for check-out
         record = await Attendance.create({
           teacherId,
           date: today,
           checkIn: null, 
           checkOut: now,
           status: 'Present',
-          note: 'Missed Check-in, Scanned for Check-out'
+          note: 'Missed Check-in, Scanned for Check-out (PKT)'
         });
         console.log("Check-out created (missed check-in):", record._id);
       }
     } else {
-      // Rest of the time (e.g., late night or very early morning)
-      const msg = hour < 5 ? "Attendance starts after 5:00 AM" : "Attendance window closed for today";
+      const msg = pkHour < 5 ? `Too early! It's currently ${pkHour}:00 AM. Attendance starts after 5:00 AM.` : "Attendance window closed for today.";
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 

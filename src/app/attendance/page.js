@@ -6,7 +6,18 @@ import FaceRecognition from '@/components/FaceRecognition';
 export default function AttendancePage() {
   const [teachers, setTeachers] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
-  const [date] = useState(new Date().toISOString().split('T')[0]); // Force current date
+  
+  // Get current date in Pakistan timezone (YYYY-MM-DD)
+  const getTodayStr = () => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Karachi',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  };
+
+  const [date] = useState(getTodayStr()); 
   const [loading, setLoading] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
 
