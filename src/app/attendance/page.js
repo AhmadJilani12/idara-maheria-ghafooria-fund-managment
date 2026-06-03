@@ -75,6 +75,11 @@ export default function AttendancePage() {
   };
 
   const getTeacherStatus = (teacherId) => {
+    // Ensure attendanceData is an array to avoid "find is not a function" crash
+    if (!Array.isArray(attendanceData)) {
+      return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out' };
+    }
+
     // Ensure we compare strings to strings
     const record = attendanceData.find(a => {
       const id = a.teacherId?._id || a.teacherId;

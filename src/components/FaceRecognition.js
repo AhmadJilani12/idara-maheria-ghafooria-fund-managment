@@ -17,10 +17,14 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
         await loadModels();
         setMessage('Loading teacher face data...');
         
-        // Prepare FaceMatcher
-        console.log("Scanner Deep Debug: First Teacher raw data:", teachers[0]);
+        // Safety Check: Ensure teachers is an array
+        const teachersList = Array.isArray(teachers) ? teachers : [];
+
+        if (teachersList.length > 0) {
+            console.log("Scanner Deep Debug: First Teacher raw data:", teachersList[0]);
+        }
         
-        const withFace = teachers.filter(t => {
+        const withFace = teachersList.filter(t => {
           // Normalize descriptor - handles both objects and arrays
           if (t.faceDescriptor) {
             const arr = Array.isArray(t.faceDescriptor) ? t.faceDescriptor : Object.values(t.faceDescriptor);
@@ -29,7 +33,7 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           return false;
         });
 
-        console.log("Scanner Data Check:", { total: teachers.length, withFaceCount: withFace.length });
+        console.log("Scanner Data Check:", { total: teachersList.length, withFaceCount: withFace.length });
 
         const labeledDescriptors = withFace.map(t => {
             const descriptorArray = Array.isArray(t.faceDescriptor) ? t.faceDescriptor : Object.values(t.faceDescriptor);
@@ -40,7 +44,7 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           });
 
         if (labeledDescriptors.length === 0) {
-          setMessage(`Error: No faces found. Found ${teachers.length} teachers, but 0 have face data saved.`);
+          setMessage(`Error: No faces found. Found ${teachersList.length} teachers, but 0 have face data saved.`);
           setInitializing(false);
           return;
         }
