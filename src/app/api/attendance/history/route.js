@@ -13,17 +13,18 @@ export async function GET(request) {
 
     let query = {};
 
-    if (teacherId) {
+    // Only add to query if not empty or null
+    if (teacherId && teacherId !== '' && teacherId !== 'null') {
       query.teacherId = teacherId;
     }
 
-    if (startDateStr || endDateStr) {
+    if ((startDateStr && startDateStr !== '') || (endDateStr && endDateStr !== '')) {
       query.date = {};
-      if (startDateStr) {
+      if (startDateStr && startDateStr !== '') {
         const start = new Date(startDateStr + 'T00:00:00');
         query.date.$gte = start;
       }
-      if (endDateStr) {
+      if (endDateStr && endDateStr !== '') {
         const end = new Date(endDateStr + 'T23:59:59');
         query.date.$lte = end;
       }

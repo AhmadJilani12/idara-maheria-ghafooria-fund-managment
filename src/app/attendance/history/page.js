@@ -17,8 +17,12 @@ export default function AttendanceHistoryPage() {
 
   useEffect(() => {
     fetchTeachers();
-    fetchHistory();
   }, []);
+
+  // Fetch history whenever filters change
+  useEffect(() => {
+    fetchHistory();
+  }, [filters]);
 
   const fetchTeachers = async () => {
     try {
@@ -33,9 +37,16 @@ export default function AttendanceHistoryPage() {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const query = new URLSearchParams(filters).toString();
+      // Create a clean query object without empty strings
+      const cleanFilters = {};
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) cleanFilters[key] = filters[key];
+      });
+
+      const query = new URLSearchParams(cleanFilters).toString();
       const res = await fetch(`/api/attendance/history?${query}`, { cache: 'no-store' });
       const data = await res.json();
+      
       if (Array.isArray(data)) {
         setHistory(data);
       } else {
@@ -58,7 +69,6 @@ export default function AttendanceHistoryPage() {
   const resetFilters = () => {
     setFilters({ teacherId: '', startDate: '', endDate: '' });
     setCurrentPage(1);
-    setTimeout(fetchHistory, 0);
   };
 
   // Pagination logic
