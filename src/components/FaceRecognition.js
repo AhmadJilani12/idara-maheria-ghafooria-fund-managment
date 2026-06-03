@@ -171,65 +171,50 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
             width: '100%', 
             display: 'block',
             transform: 'scaleX(-1)', // Mirror effect
-            filter: message.includes('✅') ? 'brightness(0.6) blur(2px)' : 'none',
+            filter: message.includes('✅') ? 'brightness(0.7)' : 'none',
             transition: 'filter 0.5s ease'
           }}
         />
 
-        {/* Success Overlay - Polished and compact */}
-        {message.includes('✅') && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(255, 255, 255, 0.95)',
-            color: '#1a5f3d',
-            padding: '2rem',
-            borderRadius: '20px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-            zIndex: 100,
-            width: '85%',
-            maxWidth: '380px',
-            border: '4px solid #28a745'
-          }}>
-            <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>✅</div>
-            <h2 style={{ color: '#1a5f3d', marginBottom: '0.5rem', fontSize: '1.4rem' }}>Attendance Marked!</h2>
-            <p style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#333' }}>
-              {message.split('\n')[1]}
-            </p>
-            <p style={{ fontSize: '0.9rem', color: '#666' }}>{message.split('\n')[2]}</p>
-            
-            <div style={{ marginTop: '1.5rem', height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ 
-                height: '100%', 
-                background: '#28a745', 
-                width: '100%',
-                transition: 'width 3s linear'
-              }}></div>
-            </div>
-          </div>
-        )}
-
-        {!message.includes('✅') && (
-          <div style={{
-            position: 'absolute',
-            bottom: '1.5rem',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '30px',
-            fontSize: '0.85rem',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            whiteSpace: 'nowrap'
-          }}>
-            {message}
-          </div>
-        )}
+        {/* Status Pill - Shows at the bottom for both scanning and success */}
+        <div style={{
+          position: 'absolute',
+          bottom: '1.5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: message.includes('✅') ? 'rgba(40, 167, 69, 0.95)' : 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '0.8rem 1.5rem',
+          borderRadius: '30px',
+          fontSize: '1rem',
+          fontWeight: '600',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          whiteSpace: 'pre-line',
+          textAlign: 'center',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+          zIndex: 100,
+          minWidth: '200px',
+          animation: message.includes('✅') ? 'pulse 2s infinite' : 'none'
+        }}>
+          {message.includes('✅') ? (
+            <>
+              <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>✅</span>
+              {message.replace('✅ Success!\n', '')}
+            </>
+          ) : (
+            message
+          )}
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: translateX(-50%) scale(1); }
+          50% { transform: translateX(-50%) scale(1.05); }
+          100% { transform: translateX(-50%) scale(1); }
+        }
+      `}</style>
 
       <div style={{ padding: '1.5rem', textAlign: 'center' }}>
         <button className="btn btn-outline" onClick={onCancel} disabled={message.includes('✅')}>Cancel</button>
