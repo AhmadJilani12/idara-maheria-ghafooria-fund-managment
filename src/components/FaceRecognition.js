@@ -83,18 +83,17 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
         }
 
         try {
-          // Optimization: Increased input size for better detection at distance
-          // and slightly lowered score threshold for faster detection
+          // Optimization: Adjusted input size to 224 for faster detection on slower devices
+          // and ensured consistent feedback
           const detection = await faceapi
             .detectSingleFace(
               videoRef.current, 
-              new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })
+              new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 })
             )
             .withFaceLandmarks()
             .withFaceDescriptor();
 
           if (!detection) {
-            // Only show message if no face has been seen for a bit to avoid flickering
             setMessage('Scanning... Please look at the camera.');
             return;
           }
