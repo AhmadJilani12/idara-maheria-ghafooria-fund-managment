@@ -82,8 +82,12 @@ export async function POST(request) {
     } else if (pkHour >= 12 && pkHour < 23) {
       // CHECK-OUT WINDOW (12 PM - 11 PM PKT)
       if (record) {
+        // Safe update of note
+        const existingNote = record.note || '';
         record.checkOut = now;
-        record.note = (record.note || '') + (record.note?.includes('Check-out') ? '' : ' | Face Scan Check-out (PKT)');
+        if (!existingNote.includes('Check-out')) {
+          record.note = existingNote + ' | Face Scan Check-out (PKT)';
+        }
         await record.save();
         console.log("Check-out updated:", record._id);
       } else {
