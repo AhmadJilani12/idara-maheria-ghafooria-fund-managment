@@ -40,20 +40,36 @@ export default function AttendancePage() {
         body: JSON.stringify({ teacherId, date })
       });
 
+      const result = await response.json();
+
       if (response.ok) {
+        // Show what actually happened
+        if (result.checkOut && !result.checkIn) {
+          alert("Check-out marked! (Note: Check-in was missed)");
+        } else if (result.checkOut) {
+          alert("Check-out marked successfully!");
+        } else {
+          alert("Check-in marked successfully!");
+        }
+        
         await fetchData(); // Refresh list
         setShowScanner(false);
       } else {
-        const err = await response.json();
-        alert(err.error || "Failed to mark attendance");
+        alert(result.error || "Failed to mark attendance");
       }
     } catch (error) {
       console.error("Error marking attendance:", error);
+      alert("System Error: Could not connect to attendance server.");
     }
   };
 
   const getTeacherStatus = (teacherId) => {
-    const record = attendanceData.find(a => (a.teacherId?._id || a.teacherId) === teacherId);
+    // Ensure we compare strings to strings
+    const record = attendanceData.find(a => {
+      const id = a.teacherId?._id || a.teacherId;
+      return id?.toString() === teacherId?.toString();
+    });
+
     if (!record) return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out' };
     
     return {
@@ -66,7 +82,7 @@ export default function AttendancePage() {
     <div className="container-fluid">
       <header className="page-header">
         <h1>📝 Daily Attendance ({new Date().toLocaleDateString()})</h1>
-        <p>Teachers Check-in (after 6 AM) & Check-out (after 8 AM)</p>
+        <p>Teachers Check-in (5 AM - 12 PM) & Check-out (12 PM - 11 PM)</p>
       </header>
 
       {showScanner && (
