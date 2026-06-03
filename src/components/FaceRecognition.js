@@ -184,9 +184,13 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           autoPlay
           muted
           playsInline
+          onLoadedMetadata={() => console.log("Video metadata loaded")}
+          onCanPlay={() => console.log("Video can play")}
           style={{ 
             width: '100%', 
+            minHeight: '300px', // Ensure it has height
             display: 'block',
+            backgroundColor: '#333', // Fallback color
             transform: 'scaleX(-1)', // Mirror effect
             filter: message.includes('✅') ? 'brightness(0.7)' : 'none',
             transition: 'filter 0.5s ease'
