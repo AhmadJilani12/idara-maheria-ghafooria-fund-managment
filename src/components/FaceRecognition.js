@@ -54,8 +54,6 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          // Ensure it plays
-          videoRef.current.play().catch(e => console.error("Error playing video:", e));
         }
         setInitializing(false);
         setMessage('Ready! Please look at the camera.');
@@ -83,6 +81,9 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
     const REQUIRED_MATCHES = 3; 
 
     if (recognizing && videoRef.current) {
+      // Ensure video is playing
+      videoRef.current.play().catch(e => console.error("Video play error:", e));
+
       interval = setInterval(async () => {
         if (isProcessing || !videoRef.current || videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState < 2) {
           return;
