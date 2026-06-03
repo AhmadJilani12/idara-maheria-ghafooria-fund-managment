@@ -51,16 +51,18 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
 
         faceMatcherRef.current = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // Ensure it plays
+          videoRef.current.play().catch(e => console.error("Error playing video:", e));
         }
         setInitializing(false);
         setMessage('Ready! Please look at the camera.');
         setRecognizing(true);
       } catch (err) {
         console.error("Recognition error:", err);
-        setMessage('Error initializing camera.');
+        setMessage('Error initializing camera. Please ensure permissions are granted.');
         setInitializing(false);
       }
     };
