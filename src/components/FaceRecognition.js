@@ -7,17 +7,22 @@ import { loadModels } from '@/lib/faceApi';
 export default function FaceRecognition({ teachers, onMatch, onCancel }) {
   const [initializing, setInitializing] = useState(true);
   const [recognizing, setRecognizing] = useState(false);
-  const [message, setMessage] = useState('Initializing...');
+  const [message, setMessage] = useState('Initializing Face API...');
   const [snapshot, setSnapshot] = useState(null);
   const videoRef = useRef();
   const canvasRef = useRef();
   const faceMatcherRef = useRef(null);
 
   useEffect(() => {
+    let stream = null;
     const startRecognition = async () => {
       try {
+        console.log("Recognition: Loading models...");
+        setMessage('Loading models (this may take a moment)...');
         await loadModels();
-        setMessage('Loading teacher face data...');
+        
+        console.log("Recognition: Models loaded. Preparing teacher data...");
+        setMessage('Preparing teacher data...');
         
         const teachersList = Array.isArray(teachers) ? teachers : [];
         const withFace = teachersList.filter(t => {
@@ -28,6 +33,8 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           return false;
         });
 
+        console.log(`Recognition: Found ${withFace.length} teachers with face data.`);
+
         const labeledDescriptors = withFace.map(t => {
             const descriptorArray = Array.isArray(t.faceDescriptor) ? t.faceDescriptor : Object.values(t.faceDescriptor);
             return new faceapi.LabeledFaceDescriptors(
@@ -37,31 +44,52 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           });
 
         if (labeledDescriptors.length === 0) {
-          setMessage(`Error: No faces found. Found ${teachersList.length} teachers, but 0 have face data saved.`);
+          setMessage(`No registered faces found in database.`);
           setInitializing(false);
           return;
         }
 
         faceMatcherRef.current = new faceapi.FaceMatcher(labeledDescriptors, 0.45);
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log("Recognition: Requesting camera access...");
+        setMessage('Requesting camera access...');
+        
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
+        });
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // Robust play call
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play()
+              .then(() => {
+                console.log("Recognition: Camera playing.");
+                setMessage('Ready! Please look at the camera.');
+                setRecognizing(true);
+                setInitializing(false);
+              })
+              .catch(e => {
+                console.error("Recognition: Play error:", e);
+                setMessage('Camera error: Could not start video feed.');
+              });
+          };
         }
-        setInitializing(false);
-        setMessage('Ready! Please look at the camera.');
-        setRecognizing(true);
       } catch (err) {
         console.error("Recognition error:", err);
-        setMessage('Error initializing camera. Please ensure permissions are granted.');
+        setMessage('Error: ' + (err.message || 'Check camera permissions.'));
         setInitializing(false);
       }
     };
     startRecognition();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
     };
   }, [teachers]);
