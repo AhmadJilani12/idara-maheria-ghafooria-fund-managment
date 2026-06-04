@@ -190,9 +190,7 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
     }
     return () => {
       clearInterval(interval);
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
+      // Removed track stopping from here as it's managed by the first useEffect
     };
   }, [recognizing, teachers, onMatch]);
 
