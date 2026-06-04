@@ -10,7 +10,6 @@ export default function PublicAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   
-  // Get current date in Pakistan timezone (YYYY-MM-DD)
   const getTodayStr = () => {
     return new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Karachi',
@@ -45,6 +44,7 @@ export default function PublicAttendancePage() {
   };
 
   const handleFaceMatch = async (teacherId) => {
+    console.log("Scan: handleFaceMatch triggered for teacherId:", teacherId);
     setStatus({ type: 'loading', message: 'Processing attendance...' });
     try {
       const response = await fetch('/api/attendance', {
@@ -54,6 +54,7 @@ export default function PublicAttendancePage() {
       });
 
       const result = await response.json();
+      console.log("Scan: API Response:", response.status, result);
 
       if (response.ok) {
         let msg = "Attendance marked successfully!";
@@ -61,7 +62,7 @@ export default function PublicAttendancePage() {
         else if (result.checkOut) msg = "Check-out marked successfully!";
         
         setStatus({ type: 'success', message: msg });
-        await fetchData(); // Refresh list
+        await fetchData();
         
         setTimeout(() => {
           setShowScanner(false);
@@ -79,24 +80,24 @@ export default function PublicAttendancePage() {
   };
 
   const getTeacherStatus = (teacherId) => {
-    if (!Array.isArray(attendanceData)) return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out' };
+    if (!Array.isArray(attendanceData)) return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out', isPresent: false };
 
     const record = attendanceData.find(a => {
       const id = a.teacherId?._id || a.teacherId;
       return id?.toString() === teacherId?.toString();
     });
 
-    if (!record) return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out' };
+    if (!record) return { checkIn: 'Not Checked In', checkOut: 'Not Checked Out', isPresent: false };
     
     return {
       checkIn: record.checkIn ? new Date(record.checkIn).toLocaleTimeString() : 'Not Checked In',
-      checkOut: record.checkOut ? new Date(record.checkOut).toLocaleTimeString() : 'Not Checked Out'
+      checkOut: record.checkOut ? new Date(record.checkOut).toLocaleTimeString() : 'Not Checked Out',
+      isPresent: !!(record.checkIn || record.checkOut)
     };
   };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', paddingBottom: '3rem' }}>
-      {/* Public Header */}
       <nav style={{ background: 'var(--primary)', color: 'white', padding: '1rem 2rem', boxShadow: 'var(--shadow)', marginBottom: '2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -104,7 +105,7 @@ export default function PublicAttendancePage() {
             <h1 style={{ fontSize: '1.2rem', margin: 0, color: 'white' }}>Idara Maheria Staff Portal</h1>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: '600' }}>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div style={{ fontWeight: '600' }}>{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div >
             <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Public Attendance Dashboard</div>
           </div>
         </div>
@@ -125,27 +126,6 @@ export default function PublicAttendancePage() {
                   onMatch={handleFaceMatch}
                   onCancel={() => setShowScanner(false)}
                 />
-
-                {status.message && (
-                  <div style={{ 
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    background: status.type === 'success' ? 'rgba(40, 167, 69, 0.9)' : 'rgba(255,255,255,0.9)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 100,
-                    color: status.type === 'success' ? 'white' : 'inherit',
-                    textAlign: 'center',
-                    padding: '2rem'
-                  }}>
-                    {status.type === 'loading' && <div className="spinner"></div>}
-                    {status.type === 'success' && <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>✅</div>}
-                    {status.type === 'error' && <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>⚠️</div>}
-                    <h2 style={{ color: status.type === 'success' ? 'white' : 'inherit' }}>{status.message}</h2>
-                  </div>
-                )}
              </div>
           </div>
         ) : (
@@ -196,8 +176,8 @@ export default function PublicAttendancePage() {
                                 {status.checkOut}
                               </td>
                               <td>
-                                <span className={`badge badge-${status.checkIn === 'Not Checked In' ? 'danger' : 'success'}`}>
-                                  {status.checkIn === 'Not Checked In' ? 'Absent' : 'Present'}
+                                <span className={`badge badge-${status.isPresent ? 'success' : 'danger'}`}>
+                                  {status.isPresent ? 'Present' : 'Absent'}
                                 </span>
                               </td>
                             </tr>

@@ -8,7 +8,9 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
   const [initializing, setInitializing] = useState(true);
   const [recognizing, setRecognizing] = useState(false);
   const [message, setMessage] = useState('Initializing...');
+  const [snapshot, setSnapshot] = useState(null);
   const videoRef = useRef();
+  const canvasRef = useRef();
   const faceMatcherRef = useRef(null);
 
   useEffect(() => {
@@ -17,23 +19,14 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
         await loadModels();
         setMessage('Loading teacher face data...');
         
-        // Safety Check: Ensure teachers is an array
         const teachersList = Array.isArray(teachers) ? teachers : [];
-
-        if (teachersList.length > 0) {
-            console.log("Scanner Deep Debug: First Teacher raw data:", teachersList[0]);
-        }
-        
         const withFace = teachersList.filter(t => {
-          // Normalize descriptor - handles both objects and arrays
           if (t.faceDescriptor) {
             const arr = Array.isArray(t.faceDescriptor) ? t.faceDescriptor : Object.values(t.faceDescriptor);
             return arr.length > 50;
           }
           return false;
         });
-
-        console.log("Scanner Data Check:", { total: teachersList.length, withFaceCount: withFace.length });
 
         const labeledDescriptors = withFace.map(t => {
             const descriptorArray = Array.isArray(t.faceDescriptor) ? t.faceDescriptor : Object.values(t.faceDescriptor);
@@ -49,7 +42,7 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           return;
         }
 
-        faceMatcherRef.current = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
+        faceMatcherRef.current = new faceapi.FaceMatcher(labeledDescriptors, 0.45);
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
@@ -73,17 +66,13 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
     };
   }, [teachers]);
 
-  // Recognition Loop
   useEffect(() => {
     let interval;
     let matchCounter = 0; 
-    let isProcessing = false; // Prevents multiple rapid submissions
+    let isProcessing = false; 
     const REQUIRED_MATCHES = 3; 
 
     if (recognizing && videoRef.current) {
-      // Ensure video is playing
-      videoRef.current.play().catch(e => console.error("Video play error:", e));
-
       interval = setInterval(async () => {
         if (isProcessing || !videoRef.current || videoRef.current.paused || videoRef.current.ended || videoRef.current.readyState < 2) {
           return;
@@ -104,7 +93,6 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
             return;
           }
 
-          // Check Orientation
           const landmarks = detection.landmarks;
           const nose = landmarks.getNose()[0];
           const leftEye = landmarks.getLeftEye()[0];
@@ -128,33 +116,42 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
               setMessage(`Recognizing... (${matchCounter}/${REQUIRED_MATCHES})`);
               
               if (matchCounter >= REQUIRED_MATCHES) {
-                isProcessing = true; // Block further processing
+                isProcessing = true; 
                 const matchedTeacher = teachers.find(t => t._id === match.label);
                 
                 if (matchedTeacher) {
                   setRecognizing(false);
-                  if (videoRef.current) {
-                    videoRef.current.pause();
-                  }
                   
-                  // Stop camera immediately
+                  // Snapshot
+                  if (videoRef.current && canvasRef.current) {
+                    const ctx = canvasRef.current.getContext('2d');
+                    canvasRef.current.width = videoRef.current.videoWidth;
+                    canvasRef.current.height = videoRef.current.videoHeight;
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(videoRef.current, -canvasRef.current.width, 0, canvasRef.current.width, canvasRef.current.height);
+                    setSnapshot(canvasRef.current.toDataURL('image/png'));
+                  }
+
+                  if (videoRef.current) videoRef.current.pause();
+                  
                   if (videoRef.current?.srcObject) {
                     videoRef.current.srcObject.getTracks().forEach(track => track.stop());
                   }
 
-                  setMessage(`✅ ${matchedTeacher.name} verified!`);
+                  setMessage(`✅ ${matchedTeacher.name} Verified!\n${new Date().getHours() < 12 ? 'Check-in' : 'Check-out'} marked successfully at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\nThank You!`);
                   
-                  // Final delay before triggering parent callback
+                  console.log("Scanner: Attempting onMatch callback for:", matchedTeacher.name, matchedTeacher._id);
+                  
                   setTimeout(() => {
                     onMatch(matchedTeacher._id);
-                  }, 2000); // 2 second delay for UX
+                  }, 3000);
                 } else {
-                  isProcessing = false; // Reset if teacher not found
+                  isProcessing = false; 
                 }
               }
             } else {
               matchCounter = 0;
-              setMessage('Searching...');
+              setMessage('❌ Match not found. Please ensure you are registered.');
             }
           }
         } catch (err) {
@@ -179,31 +176,32 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
       </div>
       
       <div style={{ position: 'relative', textAlign: 'center', background: '#000', minHeight: '300px' }}>
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          onLoadedMetadata={() => console.log("Video metadata loaded")}
-          onCanPlay={() => console.log("Video can play")}
-          style={{ 
-            width: '100%', 
-            minHeight: '300px', // Ensure it has height
-            display: 'block',
-            backgroundColor: '#333', // Fallback color
-            transform: 'scaleX(-1)', // Mirror effect
-            filter: message.includes('✅') ? 'brightness(0.7)' : 'none',
-            transition: 'filter 0.5s ease'
-          }}
-        />
-
-        {/* Status Pill - Shows at the bottom for both scanning and success */}
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+        {snapshot ? (
+          <img src={snapshot} alt="Verified" style={{ width: '100%', display: 'block' }} />
+        ) : (
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            onLoadedMetadata={() => videoRef.current.play().catch(e => console.error("Play error:", e))}
+            style={{ 
+              width: '100%', 
+              minHeight: '300px', 
+              display: 'block',
+              backgroundColor: '#333', 
+              transform: 'scaleX(-1)', 
+              transition: 'filter 0.5s ease'
+            }}
+          />
+        )}
         <div style={{
           position: 'absolute',
           bottom: '1.5rem',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: message.includes('✅') ? 'rgba(40, 167, 69, 0.95)' : 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.7)',
           color: 'white',
           padding: '0.8rem 1.5rem',
           borderRadius: '30px',
@@ -211,33 +209,21 @@ export default function FaceRecognition({ teachers, onMatch, onCancel }) {
           fontWeight: '600',
           backdropFilter: 'blur(4px)',
           border: '1px solid rgba(255,255,255,0.2)',
-          whiteSpace: 'pre-line',
           textAlign: 'center',
           boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
           zIndex: 100,
           minWidth: '200px',
-          animation: message.includes('✅') ? 'pulse 2s infinite' : 'none'
         }}>
-          {message.includes('✅') ? (
-            <>
-              <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>✅</span>
-              {message.replace('✅ Success!\n', '')}
-            </>
-          ) : (
-            message
-          )}
+          {message}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes pulse {
-          0% { transform: translateX(-50%) scale(1); }
-          50% { transform: translateX(-50%) scale(1.05); }
-          100% { transform: translateX(-50%) scale(1); }
-        }
-      `}</style>
-
       <div style={{ padding: '1.5rem', textAlign: 'center' }}>
+        {!message.includes('✅') && (
+          <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem', lineHeight: '1.4' }}>
+            <p>💡 <strong>Tip:</strong> Please hold still close to the camera.<br/>
+            Scanning may take 10-15 seconds. Please be patient.</p>
+          </div>
+        )}
         <button className="btn btn-outline" onClick={onCancel} disabled={message.includes('✅')}>Cancel</button>
       </div>
     </div>
