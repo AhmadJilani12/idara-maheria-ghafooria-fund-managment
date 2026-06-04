@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-
+//comment added
 export default function Receipt({ data, onClose }) {
   const [mounted, setMounted] = useState(false);
 
